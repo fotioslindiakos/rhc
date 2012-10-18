@@ -93,8 +93,8 @@ module RHC
         show_tables(tables)
       end
 
-      # Return whether there was any information to show
       !tables.empty?
+      # Return whether there was any information to show
     end
 
     def show_tables(tables)
@@ -106,15 +106,15 @@ module RHC
     def to_table(title,values)
       items = []
 
-      values = case values
-               when Hash
-                 values
-               else
-                 Hash[[values].flatten.map{|x| [x,nil]}]
-               end
+      new_values = case values
+                    when Hash
+                      values
+                    else
+                      Hash[[values].flatten.map{|x| [x,nil]}]
+                    end
 
-      values.each do |key,val|
-        items << [key,val.to_s || ""]
+      new_values.each do |key,val|
+        items << [key,format_value(val)]
       end
 
       table = table items, :join => " = "
@@ -125,6 +125,17 @@ module RHC
           s.gsub!(/\s*=\s*$/,'')
           say indent(s,2)
         end
+      end
+    end
+
+    def format_value(val)
+      case
+      when val.nil?
+        ""
+      when (date = date(val)) != "Unknown date"
+        date
+      else
+        val.to_s
       end
     end
 
