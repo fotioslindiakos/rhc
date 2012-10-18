@@ -54,7 +54,7 @@ module RHC::Commands
           else
             apps.each_with_index do |a,i|
               section(:top => (i == 0 ? 1 : 2)) do
-                say_app_info(a)
+                display_app_info(a)
               end
             end
           end

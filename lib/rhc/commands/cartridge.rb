@@ -32,10 +32,8 @@ module RHC::Commands
       rest_cartridge = rest_app.add_cartridge(cart.name)
       say "Success"
 
-      paragraph do
-        header "Useful #{cart.name} properties"
-        properties_table(rest_cartridge).each { |s| say "  #{s}" }
-      end
+      display_cart_info(rest_cartridge)
+
       0
     end
 
@@ -49,10 +47,8 @@ module RHC::Commands
       rest_app = rest_domain.find_application(options.app)
       rest_cartridge = find_cartridge rest_app, cartridge, nil
 
-      paragraph do
-        header "#{rest_cartridge.name} properties"
-        properties_table(rest_cartridge).each { |s| say "  #{s}" }
-      end
+      display_cart_info(rest_cartridge)
+
       0
     end
 
@@ -173,6 +169,7 @@ module RHC::Commands
 
       results do
         say "Success: Scaling values updated"
+        display_cart_info(cart)
       end
 
       0

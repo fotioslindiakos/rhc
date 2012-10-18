@@ -156,6 +156,50 @@ MESSAGE
           raise SocketError, msg
         end
       end
+
+      #
+      # These are for displaying information in the RHC commands
+      #
+      def header
+        "%s @ %s" % [name, app_url]
+      end
+
+      def application_info
+        [
+          "Application Info",
+          {
+            "Created" => creation_time,
+            "UUID"    => uuid,
+            "Git URL" => (git_url if git_url),
+            "SSH URL" => (ssh_url if ssh_url),
+            "Aliases" => (aliases.join(', ') if aliases)
+          }.delete_if{|k,v| v.nil? or v.empty? }
+        ]
+      end
+
+      def scaling_info
+        cart = scalable_carts.first
+        return nil if cart.nil?
+
+        cart_info = cart.scaling_info.last
+
+        str = "Scaled x%d (minimum: %s, maximum: %s) with %s on %s gears" %
+          [
+            cart_info["Current"],
+            cart_info["Minimum"],
+            cart_info["Maximum"],
+            cart.scales_with,
+            gear_profile]
+        ["Scaling Info",str]
+      end
+
+      def cartridges_info
+        return nil unless cartridges.present?
+        hash = Hash[cartridges.map do |cart|
+          [cart.name,cart.connection_info]
+        end]
+        ["Cartridges",hash]
+      end
     end
   end
 end
