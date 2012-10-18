@@ -105,16 +105,22 @@ module RHC
 
     def to_table(title,values)
       items = []
+      sort_order = nil
 
       new_values = case values
-                    when Hash
-                      values
-                    else
-                      Hash[[values].flatten.map{|x| [x,nil]}]
-                    end
+                   when Hash
+                     sort_order = values.delete(:sort_order)
+                     values
+                   else
+                     Hash[[values].flatten.map{|x| [x,nil]}]
+                   end
 
       new_values.each do |key,val|
         items << [key,format_value(val)]
+      end
+
+      if sort_order
+        items.sort!{|x,y| sort_order.index(x.first) <=> sort_order.index(y.first)}
       end
 
       table = table items, :join => " = "
@@ -129,11 +135,20 @@ module RHC
     end
 
     def format_value(val)
+      def is_date?(val)
+        begin
+          date = Date.parse(val)
+          date != "Unknown date"
+        rescue
+          false
+        end
+      end
+
       case
       when val.nil?
         ""
-      when (date = date(val)) != "Unknown date"
-        date
+      when is_date?(val)
+        date(val)
       else
         val.to_s
       end

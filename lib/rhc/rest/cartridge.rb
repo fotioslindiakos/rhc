@@ -81,6 +81,7 @@ module RHC
             "Current" => current_scale,
             "Minimum" => scale_to_s(scales_from),
             "Maximum" => scale_to_s(scales_to),
+            :sort_order => %w(Current Minimum Maximum)
           }
         ] : nil
       end

@@ -172,7 +172,8 @@ MESSAGE
             "UUID"    => uuid,
             "Git URL" => (git_url if git_url),
             "SSH URL" => (ssh_url if ssh_url),
-            "Aliases" => (aliases.join(', ') if aliases)
+            "Aliases" => (aliases.join(', ') if aliases),
+            :sort_order => ["Created","UUID","Git URL","SSH URL","Aliases"]
           }.delete_if{|k,v| v.nil? or v.empty? }
         ]
       end
