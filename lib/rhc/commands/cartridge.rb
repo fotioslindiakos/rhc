@@ -47,7 +47,7 @@ module RHC::Commands
       rest_app = rest_domain.find_application(options.app)
       rest_cartridge = find_cartridge rest_app, cartridge, nil
 
-      display_cart(rest_cartridge)
+      display_cart(rest_cartridge,rest_cartridge.properties[:cart_data])
 
       0
     end

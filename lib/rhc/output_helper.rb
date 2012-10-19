@@ -52,14 +52,12 @@ module RHC
       not @issues.nil?
     end
 
-    ##
-    # These functions will display the relevation information for an object
-    #
-    # The first element is the title, and the rest are tables
-    #   If the table is blank, it will be skipped
-    #   If there are no tables, the "no_info_table" will be used
-    #
+    # This variable maintains indentation across nested tables
     @@indent = 0
+
+    #---------------------------
+    # Domain information
+    #---------------------------
 
     # This is a little different because we don't want to recreate the display_app function
     def display_domain(domain)
@@ -69,55 +67,103 @@ module RHC
         @@indent += 1
         domain.applications.each_with_index do |a,i|
           section(:top => (i == 0 ? 1 : 2)) do
-            display_app(a)
+            display_app(a,a.cartridges,a.scalable_carts.first)
           end
         end.blank? and say "No applications. You can use 'rhc app create' to create new applications."
       end
     end
 
-    def display_app(app)
-      show_tables(
-        "%s @ %s" % [app.name, app.app_url],
-        ["Application Info",properties_table(app,:creation_time,:uuid,:git_url,:ssh_url,:aliases)],
-        ["Cartridges", included_carts_table(app)],
-        ["Scaling Info", app_scaling_info_table(app)]
-      )
-
-      # Uncomment this for easier showing of all of the cartridges for this app
-      # TODO: Remove before final commit
+    #---------------------------
+    # Application information
+    #---------------------------
+    def display_app(app,cartridges = nil,scalable_cart = nil)
+      heading = "%s @ %s" % [app.name, app.app_url]
+      paragraph do
+        header heading
+        display_app_properties(app,:creation_time,:uuid,:git_url,:ssh_url,:aliases)
+        display_included_carts(cartridges) if cartridges
+        display_scaling_info(app,scalable_cart) if scalable_cart
+      end
+    ensure
       if ENV['SHOW_CARTS']
         say "-" * 50
         paragraph do
           header "Cartridges"
           app.cartridges.each do |cart|
-            display_cart(cart)
+            display_cart(cart,cart.properties[:cart_data])
           end
         end
         say "-" * 50
       end
     end
 
-    def display_cart(cart)
-      show_tables(
-        cart.name,
-        ["Properties", cart_info_table(cart)],
-        ["Scaling Info", cart_scaling_info_table(cart)]
-      )
+    def display_app_properties(app,*properties)
+      say_table \
+        "Application Info",
+        make_table( get_properties(app,*properties), :delete => true )
     end
 
-    #
-    # Output heading and tables
-    #
-    def show_tables(title,*tables)
-      # Remove any tables with no information
-      tables.delete_if{|x| x.last.blank?}
-      tables.compact!
-      # Use the "no_info_table" to show some information
-      tables << [nil,no_info_table] if tables.blank?
+    def display_included_carts(carts)
+      properties = Hash[carts.map do |cart|
+        [cart.name,cart.connection_info]
+      end]
 
-      say_table(title,tables)
+      say_table \
+        "Cartridges",
+        make_table( properties, :preserve_keys => true )
     end
 
+    def display_scaling_info(app,cart)
+      # Save these values for easier reuse
+      values = [:current_scale,:scales_from,:scales_to,:scales_with]
+      # Get the scaling properties we care about
+      properties = get_properties(cart,*values)
+      # Format the string for applications
+      properties = "Scaled x%d (minimum: %s, maximum: %s) with %s on %s gears" %
+        [properties.values_at(*values), app.gear_profile].flatten
+
+      say_table \
+        "Scaling Info",
+        make_table(properties)
+    end
+
+    #---------------------------
+    # Cartridge information
+    #---------------------------
+
+    def display_cart(cart,properties = nil)
+      paragraph do
+        header cart.name
+        display_cart_properties(cart,properties) if properties
+        display_cart_scaling_info(cart) if cart.scalable?
+      end
+    end
+
+    def display_cart_properties(cart,properties)
+      # We need to actually access the cart because it's not a simple hash
+      properties = get_properties(cart,*properties.keys) do |prop|
+        cart.property(:cart_data,prop)["value"]
+      end
+
+      say_table \
+        "Properties",
+        make_table(properties)
+    end
+
+    def display_cart_scaling_info(cart)
+      say_table \
+        "Scaling Info",
+        make_table(get_properties(cart,:current_scale,:scales_from,:scales_to))
+    end
+
+    #---------------------------
+    # Misc information
+    #---------------------------
+    def no_info_table
+      make_table "This item has no information to show"
+    end
+
+    private
     def say_table(heading,table)
       # Reduce the indent if we don't have a heading
       paragraph do
@@ -137,62 +183,6 @@ module RHC
         end
         @@indent -= 1 if heading
       end
-    end
-
-    # Get the properties from a cartridge
-    def cart_info_table(cart)
-      properties = cart.properties[:cart_data] or return
-      # We need to actually access the cart because it's not a simple hash
-      properties = get_properties(cart,*properties.keys) do |prop|
-        cart.property(:cart_data,prop)["value"]
-      end
-      make_table properties
-    end
-
-    # Scaling info for both applications and cartridges
-    def app_scaling_info_table(app)
-      cart = app.scalable_carts.first or return
-
-      # Save these values for easier reuse
-      values = [:current_scale,:scales_from,:scales_to,:scales_with]
-      # Get the scaling properties we care about
-      properties = get_properties(cart,*values)
-      # Format the string for applications
-      properties = "Scaled x%d (minimum: %s, maximum: %s) with %s on %s gears" %
-        [properties.values_at(*values), app.gear_profile].flatten
-      make_table properties
-    end
-
-    def cart_scaling_info_table(cart)
-      return unless cart.scalable?
-      properties = get_properties(cart,:current_scale,:scales_from,:scales_to)
-      make_table properties
-    end
-
-    def properties_table(object,*properties)
-      make_table get_properties(object,*properties), :delete => true
-    end
-
-    def included_carts_table(object)
-      make_table get_carts(object), :preserve_keys => true
-    end
-
-    def no_info_table
-      make_table "This item has no information to show"
-    end
-
-    private
-
-    # This returns the carts for an application.
-    #   This is different because we change the hash to be:
-    #     {name => connection_info}
-    def get_carts(app)
-      carts = app.cartridges
-      return nil unless carts.present?
-
-      Hash[carts.map do |cart|
-        [cart.name,cart.connection_info]
-      end]
     end
 
     # This uses the array of properties to retrieve them from an object
