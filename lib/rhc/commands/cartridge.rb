@@ -32,7 +32,7 @@ module RHC::Commands
       rest_cartridge = rest_app.add_cartridge(cart.name)
       say "Success"
 
-      display_cart_info(rest_cartridge)
+      display_cart(rest_cartridge)
 
       0
     end
@@ -47,7 +47,7 @@ module RHC::Commands
       rest_app = rest_domain.find_application(options.app)
       rest_cartridge = find_cartridge rest_app, cartridge, nil
 
-      display_cart_info(rest_cartridge)
+      display_cart(rest_cartridge)
 
       0
     end
@@ -169,7 +169,7 @@ module RHC::Commands
 
       results do
         say "Success: Scaling values updated"
-        display_cart_info(cart)
+        display_cart(cart)
       end
 
       0

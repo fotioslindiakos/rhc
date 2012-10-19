@@ -52,110 +52,202 @@ module RHC
       not @issues.nil?
     end
 
-    def display_app_info(app, includes = [:application_info,:cartridges_info,:scaling_info])
-      info_table(app,includes)
+    ##
+    # These functions will display the relevation information for an object
+    #
+    # The first element is the title, and the rest are tables
+    #   If the table is blank, it will be skipped
+    #   If there are no tables, the "no_info_table" will be used
+    #
+    @@indent = 0
+
+    # This is a little different because we don't want to recreate the display_app function
+    def display_domain(domain)
+      say "No domain exists.  You can use 'rhc domain create' to create a namespace for applications." and return unless domain
+      paragraph do
+        header "Applications in %s" % domain.id
+        @@indent += 1
+        domain.applications.each_with_index do |a,i|
+          section(:top => (i == 0 ? 1 : 2)) do
+            display_app(a)
+          end
+        end.blank? and say "No applications. You can use 'rhc app create' to create new applications."
+      end
     end
 
-    def display_cart_info(cart, includes = [:properties_info,:scaling_info])
-      info_table(cart,includes)
+    def display_app(app)
+      show_tables(
+        "%s @ %s" % [app.name, app.app_url],
+        ["Application Info",properties_table(app,:creation_time,:uuid,:git_url,:ssh_url,:aliases)],
+        ["Cartridges", included_carts_table(app)],
+        ["Scaling Info", app_scaling_info_table(app)]
+      )
+
+      # Uncomment this for easier showing of all of the cartridges for this app
+      # TODO: Remove before final commit
+      if ENV['SHOW_CARTS']
+        say "-" * 50
+        paragraph do
+          header "Cartridges"
+          app.cartridges.each do |cart|
+            display_cart(cart)
+          end
+        end
+        say "-" * 50
+      end
+    end
+
+    def display_cart(cart)
+      show_tables(
+        cart.name,
+        ["Properties", cart_info_table(cart)],
+        ["Scaling Info", cart_scaling_info_table(cart)]
+      )
+    end
+
+    #
+    # Output heading and tables
+    #
+    def show_tables(title,*tables)
+      # Remove any tables with no information
+      tables.delete_if{|x| x.last.blank?}
+      tables.compact!
+      # Use the "no_info_table" to show some information
+      tables << [nil,no_info_table] if tables.blank?
+
+      say_table(title,tables)
+    end
+
+    def say_table(heading,table)
+      # Reduce the indent if we don't have a heading
+      paragraph do
+        # Show the header if we have one
+        header heading, :indent => @@indent if heading
+        # Go through all the table rows
+        @@indent += 1 if heading
+        table.each do |s|
+          # If this is an array, we're assuming it's recursive
+          if s.is_a?(Array)
+            say_table(s[0],s[1])
+          else
+            # Remove trailing = (like for cartridges list)
+            s.gsub!(/\s*=\s*$/,'')
+            indent s, @@indent
+          end
+        end
+        @@indent -= 1 if heading
+      end
+    end
+
+    # Get the properties from a cartridge
+    def cart_info_table(cart)
+      properties = cart.properties[:cart_data] or return
+      # We need to actually access the cart because it's not a simple hash
+      properties = get_properties(cart,*properties.keys) do |prop|
+        cart.property(:cart_data,prop)["value"]
+      end
+      make_table properties
+    end
+
+    # Scaling info for both applications and cartridges
+    def app_scaling_info_table(app)
+      cart = app.scalable_carts.first or return
+
+      # Save these values for easier reuse
+      values = [:current_scale,:scales_from,:scales_to,:scales_with]
+      # Get the scaling properties we care about
+      properties = get_properties(cart,*values)
+      # Format the string for applications
+      properties = "Scaled x%d (minimum: %s, maximum: %s) with %s on %s gears" %
+        [properties.values_at(*values), app.gear_profile].flatten
+      make_table properties
+    end
+
+    def cart_scaling_info_table(cart)
+      return unless cart.scalable?
+      properties = get_properties(cart,:current_scale,:scales_from,:scales_to)
+      make_table properties
+    end
+
+    def properties_table(object,*properties)
+      make_table get_properties(object,*properties), :delete => true
+    end
+
+    def included_carts_table(object)
+      make_table get_carts(object), :preserve_keys => true
+    end
+
+    def no_info_table
+      make_table "This item has no information to show"
     end
 
     private
 
-    def info_table(object,includes)
-      type = object.class.name.split("::").last.downcase
+    # This returns the carts for an application.
+    #   This is different because we change the hash to be:
+    #     {name => connection_info}
+    def get_carts(app)
+      carts = app.cartridges
+      return nil unless carts.present?
 
-      # Allow for passing a single include as a symbol
-      includes = [*includes]
-
-      # Create the tables
-      tables = Hash[includes.map do |table_type|
-        object.send(table_type)
+      Hash[carts.map do |cart|
+        [cart.name,cart.connection_info]
       end]
+    end
 
-      # Remove any undefined data
-      tables.delete_if{|key,val| val.nil? or val.empty? }
+    # This uses the array of properties to retrieve them from an object
+    def get_properties(object,*properties)
+      Hash[properties.map do |prop|
+        # Either send the property to the object or yield it
+        value = block_given? ? yield(prop) : object.send(prop)
+        # Some values (like date) need some special handling
+        value = format_value(prop,value)
 
-      # Add a top level header if we have more than one table
-      if tables.length > 1
-        paragraph do
-          header object.header
-        end
+        [prop,value]
+      end]
+    end
+
+    # Format some special values
+    def format_value(prop,value)
+      case prop
+      when :creation_time
+        date(value)
+      when :scales_from,:scales_to
+        (value == -1 ? "Unlimited" : value)
       else
-        # If just one table, prepend the object name
-        tables = tables.inject({ }) { |x, (k,v)| x["#{object.name} #{k}"] = v; x }
-      end
-
-      # Loop through each table and print it
-      if tables.empty?
-        say "This #{type} has no information to show"
-      else
-        show_tables(tables)
-      end
-
-      !tables.empty?
-      # Return whether there was any information to show
-    end
-
-    def show_tables(tables)
-      tables.each do |title,hash|
-        to_table(title,hash)
+        value
       end
     end
 
-    def to_table(title,values)
-      items = []
-      sort_order = nil
+    # Make the rows for the table
+    #   If we pass a hash, it will manipulate it into a nice table
+    #   Arrays and single vars will just be passed back as arrays
+    def make_table(values,opts = {})
+      case values
+      when Hash
+        # Loop through the values in case we need to fix them
+        _values = values.inject({}) do |h,(k,v)|
+          # Format the keys based on the table_heading function
+          #  If we pass :preserve_keys, we leave them alone (like for cart names)
+          key = opts[:preserve_keys] ? k : table_heading(k)
 
-      new_values = case values
-                   when Hash
-                     sort_order = values.delete(:sort_order)
-                     values
-                   else
-                     Hash[[values].flatten.map{|x| [x,nil]}]
-                   end
-
-      new_values.each do |key,val|
-        items << [key,format_value(val)]
-      end
-
-      if sort_order
-        items.sort!{|x,y| sort_order.index(x.first) <=> sort_order.index(y.first)}
-      end
-
-      table = table items, :join => " = "
-
-      paragraph do
-        header indent(title)
-        table.each do |s|
-          s.gsub!(/\s*=\s*$/,'')
-          say indent(s,2)
+          # Replace empty or nil values with spaces
+          #  If we pass :delete, we assume those are not needed
+          if v.blank?
+            h[key] = "" unless opts[:delete]
+          else
+            h[key] = v.to_s
+          end
+          h
         end
-      end
-    end
-
-    def format_value(val)
-      def is_date?(val)
-        begin
-          date = Date.parse(val)
-          date != "Unknown date"
-        rescue
-          false
-        end
-      end
-
-      case
-      when val.nil?
-        ""
-      when is_date?(val)
-        date(val)
+        # Join the values into rows
+        table _values, :join => " = "
+        # Create a simple array
+      when Array
+        values
       else
-        val.to_s
+        [values]
       end
-    end
-
-    def indent(str,indent = 0)
-      "%s%s" % [" " * indent, str]
     end
   end
 end

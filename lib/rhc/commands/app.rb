@@ -94,7 +94,7 @@ module RHC::Commands
         end
       end
 
-      display_app_info(rest_app)
+      display_app(rest_app)
 
       if issues?
         output_issues(rest_app)
@@ -222,7 +222,7 @@ module RHC::Commands
       rest_domain = rest_client.find_domain(options.namespace)
       rest_app = rest_domain.find_application(app)
       unless options.state
-        display_app_info(rest_app)
+        display_app(rest_app)
       else
         results do
           rest_app.gear_groups.each do |gg|

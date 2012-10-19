@@ -63,40 +63,6 @@ module RHC
         rest_method "UPDATE", values
       end
 
-      #
-      # These are for displaying information in the RHC commands
-      #
-      def header
-        "Information for #{name}"
-      end
-
-      def scaling_info
-        def scale_to_s(num)
-           (num == -1 ? "Unlimited" : num)
-        end
-
-        scalable? ? [
-          "Scaling Info",
-          {
-            "Current" => current_scale,
-            "Minimum" => scale_to_s(scales_from),
-            "Maximum" => scale_to_s(scales_to),
-            :sort_order => %w(Current Minimum Maximum)
-          }
-        ] : nil
-      end
-
-      def properties_info
-        data = properties[:cart_data]
-        return nil unless (data and !data.empty?)
-
-        hash = Hash[data.map do |key,val|
-          [val["name"], val["value"]]
-        end]
-
-        ["Properties", hash]
-      end
-
       def connection_info
         info = property(:cart_data, :connection_url) || property(:cart_data, :job_url) || property(:cart_data, :monitoring_url)
         info ?  info["value"].rstrip : nil
