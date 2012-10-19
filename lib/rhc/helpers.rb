@@ -186,14 +186,20 @@ module RHC
     end
 
     def header(s,opts = {})
-      indent s, opts[:indent]
-      indent "="*s.length, opts[:indent]
+      @indent ||= 0
+      indent s
+      indent "="*s.length
+      if block_given?
+        @indent += 1
+        yield
+        @indent -= 1
+      end
     end
 
     INDENT = 2
-    def indent(str,indent = 0)
-      indent ||= 0
-      say "%s%s" % [" " * indent * INDENT,str]
+    def indent(str)
+      @indent ||= 0
+      say "%s%s" % [" " * @indent * INDENT,str]
     end
 
     ##

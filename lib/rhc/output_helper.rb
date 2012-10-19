@@ -59,8 +59,7 @@ module RHC
     # This is a little different because we don't want to recreate the display_app function
     def display_domain(domain)
       say "No domain exists.  You can use 'rhc domain create' to create a namespace for applications." and return unless domain
-      paragraph do
-        header "Applications in %s" % domain.id
+      header "Applications in %s" % domain.id do
         domain.applications.each_with_index do |a,i|
           section(:top => (i == 0 ? 1 : 2)) do
             display_app(a,a.cartridges,a.scalable_carts.first)
@@ -74,8 +73,7 @@ module RHC
     #---------------------------
     def display_app(app,cartridges = nil,scalable_cart = nil,full_cart_info = false)
       heading = "%s @ %s" % [app.name, app.app_url]
-      paragraph do
-        header heading
+      header heading do
         display_app_properties(app,:creation_time,:uuid,:git_url,:ssh_url,:aliases)
 
         if full_cart_info || ENV['SHOW_CARTS']
@@ -88,11 +86,10 @@ module RHC
     end
 
     def display_full_carts(cartridges)
-      paragraph do
-        header "Cartridges"
-          cartridges.each do |cart|
-            display_cart(cart,cart.properties[:cart_data])
-          end
+      header "Cartridges" do
+        cartridges.each do |cart|
+          display_cart(cart,cart.properties[:cart_data])
+        end
       end
     end
 
@@ -110,8 +107,8 @@ module RHC
 
       say_table \
         "Cartridges",
-         properties,
-         :preserve_keys => true
+        properties,
+        :preserve_keys => true
     end
 
     def display_scaling_info(app,cart)
@@ -134,8 +131,7 @@ module RHC
 
     def display_cart(cart,properties = nil)
       @table_displayed = false
-      paragraph do
-        header cart.name
+      header cart.name do
         display_cart_properties(cart,properties) if properties
         display_cart_scaling_info(cart) if cart.scalable?
         display_no_info("cartridge") unless @table_displayed
@@ -174,21 +170,28 @@ module RHC
       @table_displayed = true
       table = make_table(values,opts)
 
-      # Reduce the indent if we don't have a heading
-      paragraph do
-        # Show the header if we have one
-        header heading if heading
-        # Go through all the table rows
+      # Go through all the table rows
+      _proc = proc{
         table.each do |s|
           # If this is an array, we're assuming it's recursive
           if s.is_a?(Array)
             say_table(s[0],s[1])
           else
             # Remove trailing = (like for cartridges list)
-            s.gsub!(/\s*=\s*$/,'')
-            say s
+            indent s.gsub(/\s*=\s*$/,'')
           end
         end
+      }
+
+      paragraph do
+      # Make sure we nest properly
+      if heading
+        header heading do
+          _proc.call
+        end
+      else
+        _proc.call
+      end
       end
     end
 
