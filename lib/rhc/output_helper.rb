@@ -52,9 +52,6 @@ module RHC
       not @issues.nil?
     end
 
-    # This variable maintains indentation across nested tables
-    @@indent = 0
-
     #---------------------------
     # Domain information
     #---------------------------
@@ -64,7 +61,6 @@ module RHC
       say "No domain exists.  You can use 'rhc domain create' to create a namespace for applications." and return unless domain
       paragraph do
         header "Applications in %s" % domain.id
-        @@indent += 1
         domain.applications.each_with_index do |a,i|
           section(:top => (i == 0 ? 1 : 2)) do
             display_app(a,a.cartridges,a.scalable_carts.first)
@@ -76,31 +72,35 @@ module RHC
     #---------------------------
     # Application information
     #---------------------------
-    def display_app(app,cartridges = nil,scalable_cart = nil)
+    def display_app(app,cartridges = nil,scalable_cart = nil,full_cart_info = false)
       heading = "%s @ %s" % [app.name, app.app_url]
       paragraph do
         header heading
         display_app_properties(app,:creation_time,:uuid,:git_url,:ssh_url,:aliases)
-        display_included_carts(cartridges) if cartridges
-        display_scaling_info(app,scalable_cart) if scalable_cart
+
+        if full_cart_info || ENV['SHOW_CARTS']
+          display_full_carts(cartridges) if cartridges
+        else
+          display_included_carts(cartridges) if cartridges
+          display_scaling_info(app,scalable_cart) if scalable_cart
+        end
       end
-    ensure
-      if ENV['SHOW_CARTS']
-        say "-" * 50
-        paragraph do
-          header "Cartridges"
-          app.cartridges.each do |cart|
+    end
+
+    def display_full_carts(cartridges)
+      paragraph do
+        header "Cartridges"
+          cartridges.each do |cart|
             display_cart(cart,cart.properties[:cart_data])
           end
-        end
-        say "-" * 50
       end
     end
 
     def display_app_properties(app,*properties)
       say_table \
         "Application Info",
-        make_table( get_properties(app,*properties), :delete => true )
+        get_properties(app,*properties),
+        :delete => true
     end
 
     def display_included_carts(carts)
@@ -110,7 +110,8 @@ module RHC
 
       say_table \
         "Cartridges",
-        make_table( properties, :preserve_keys => true )
+         properties,
+         :preserve_keys => true
     end
 
     def display_scaling_info(app,cart)
@@ -124,7 +125,7 @@ module RHC
 
       say_table \
         "Scaling Info",
-        make_table(properties)
+        properties
     end
 
     #---------------------------
@@ -132,10 +133,12 @@ module RHC
     #---------------------------
 
     def display_cart(cart,properties = nil)
+      @table_displayed = false
       paragraph do
         header cart.name
         display_cart_properties(cart,properties) if properties
         display_cart_scaling_info(cart) if cart.scalable?
+        display_no_info("cartridge") unless @table_displayed
       end
     end
 
@@ -147,30 +150,35 @@ module RHC
 
       say_table \
         "Properties",
-        make_table(properties)
+        properties
     end
 
     def display_cart_scaling_info(cart)
       say_table \
         "Scaling Info",
-        make_table(get_properties(cart,:current_scale,:scales_from,:scales_to))
+        get_properties(cart,:current_scale,:scales_from,:scales_to)
     end
 
     #---------------------------
     # Misc information
     #---------------------------
-    def no_info_table
-      make_table "This item has no information to show"
+
+    def display_no_info(type)
+      say_table \
+        nil,
+        "This #{type} has no information to show"
     end
 
     private
-    def say_table(heading,table)
+    def say_table(heading,values,opts = {})
+      @table_displayed = true
+      table = make_table(values,opts)
+
       # Reduce the indent if we don't have a heading
       paragraph do
         # Show the header if we have one
-        header heading, :indent => @@indent if heading
+        header heading if heading
         # Go through all the table rows
-        @@indent += 1 if heading
         table.each do |s|
           # If this is an array, we're assuming it's recursive
           if s.is_a?(Array)
@@ -178,10 +186,9 @@ module RHC
           else
             # Remove trailing = (like for cartridges list)
             s.gsub!(/\s*=\s*$/,'')
-            indent s, @@indent
+            say s
           end
         end
-        @@indent -= 1 if heading
       end
     end
 
