@@ -16,8 +16,6 @@ require 'rhc/wizard'
 require 'rhc/targz'
 require 'rhc/json'
 
-require 'pry'
-
 module RHC
 
   DEFAULT_MAX_LENGTH = 16
