@@ -162,18 +162,8 @@ module RHC
     #   If a heading isn't explicitly defined, it will attempt to look up the parts
     #   If those aren't found, it will capitalize the string
     def table_heading(value)
-      # Predefined headings (or parts of headings)
-      headings = {
-        :creation_time  => "Created",
-        :uuid           => "UUID",
-        :current_scale  => "Current",
-        :scales_from    => "Minimum",
-        :scales_to      => "Maximum",
-        :url            => "URL",
-        :ssh            => "SSH"
-      }
       # Set the default proc to look up undefined values
-      headings.default_proc = proc do |hash,key|
+      headings = Hash.new do |hash,key|
         items = key.to_s.split('_')
         # Look up each piece individually
         hash[key] = items.length > 1 ?
@@ -182,6 +172,19 @@ module RHC
           # Capitalize if this part isn't defined
           items.first.capitalize
       end
+
+      # Predefined headings (or parts of headings)
+      headings.merge!({
+        :creation_time  => "Created",
+        :uuid           => "UUID",
+        :current_scale  => "Current",
+        :scales_from    => "Minimum",
+        :scales_to      => "Maximum",
+        :url            => "URL",
+        :ssh            => "SSH",
+        :gear_profile   => "Gear Size"
+      })
+
       headings[value]
     end
 
