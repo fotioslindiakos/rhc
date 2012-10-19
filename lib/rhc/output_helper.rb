@@ -60,10 +60,8 @@ module RHC
     def display_domain(domain)
       say "No domain exists.  You can use 'rhc domain create' to create a namespace for applications." and return unless domain
       header "Applications in %s" % domain.id do
-        domain.applications.each_with_index do |a,i|
-          section(:top => (i == 0 ? 1 : 2)) do
-            display_app(a,a.cartridges,a.scalable_carts.first)
-          end
+        domain.applications.each do |a|
+          display_app(a,a.cartridges,a.scalable_carts.first)
         end.blank? and say "No applications. You can use 'rhc app create' to create new applications."
       end
     end
@@ -71,24 +69,13 @@ module RHC
     #---------------------------
     # Application information
     #---------------------------
-    def display_app(app,cartridges = nil,scalable_cart = nil,full_cart_info = false)
+    def display_app(app,cartridges = nil,scalable_cart = nil)
       heading = "%s @ %s" % [app.name, app.app_url]
-      header heading do
-        display_app_properties(app,:creation_time,:uuid,:git_url,:ssh_url,:aliases)
-
-        if full_cart_info || ENV['SHOW_CARTS']
-          display_full_carts(cartridges) if cartridges
-        else
+      paragraph do
+        header heading do
+          display_app_properties(app,:creation_time,:uuid,:git_url,:ssh_url,:aliases)
           display_included_carts(cartridges) if cartridges
           display_scaling_info(app,scalable_cart) if scalable_cart
-        end
-      end
-    end
-
-    def display_full_carts(cartridges)
-      header "Cartridges" do
-        cartridges.each do |cart|
-          display_cart(cart,cart.properties[:cart_data])
         end
       end
     end
@@ -183,7 +170,6 @@ module RHC
         end
       }
 
-      paragraph do
       # Make sure we nest properly
       if heading
         header heading do
@@ -191,7 +177,6 @@ module RHC
         end
       else
         _proc.call
-      end
       end
     end
 
