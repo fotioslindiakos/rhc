@@ -213,7 +213,7 @@ module RHC
       when :creation_time
         date(value)
       when :scales_from,:scales_to
-        (value == -1 ? "Unlimited" : value)
+        (value == -1 ? "available gears" : value)
       else
         value
       end
