@@ -8,7 +8,7 @@ module RHCHelper
   # The regex to parse the UUID output from the create app results
   UUID_OUTPUT_PATTERN = %r|UUID\s*=\s*(.+)| unless const_defined?(:UUID_OUTPUT_PATTERN)
   # The regex to parse the Gear Profile output from the create app results
-  GEAR_PROFILE_OUTPUT_PATTERN = %r|UUID\s*=\s*(?:.+)\s*\nGear Size\s*=\s*(.+)| unless const_defined?(:GEAR_PROFILE_OUTPUT_PATTERN)
+  GEAR_PROFILE_OUTPUT_PATTERN = %r|Application Info.*Gear Size\s*=\s*(\w+)|m unless const_defined?(:GEAR_PROFILE_OUTPUT_PATTERN)
   # Regex to parse passwords out of logging messages
   PASSWORD_REGEX = / -p [^\s]* / unless const_defined?(:PASSWORD_REGEX)
 end
