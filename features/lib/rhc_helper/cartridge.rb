@@ -62,5 +62,9 @@ module RHCHelper
     def remove
       rhc_cartridge('remove --confirm')
     end
+
+    def scale(values)
+      rhc_cartridge("scale #{values}")
+    end
   end
 end

@@ -24,3 +24,11 @@ Feature: Scaled Application Operations
       | stopped | started   | the application | be accessible |
       | running | deleted   | the application | not exist |
 
+  Scenario Outline: Changing Minimum Value
+    When we are updating the <cart> cartridge
+    And the <type> scaling value is set to <value>
+    Then the <type> scaling value should be <value>
+
+    Examples:
+      | cart    | type  | value |
+      | php-5.3 | min   | 3     |
