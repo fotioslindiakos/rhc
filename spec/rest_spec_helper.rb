@@ -324,6 +324,8 @@ module RestSpecHelper
       @app = app
       @properties = properties
       @status_messages = [{"message" => "started", "gear_id" => "123"}]
+      @scales_from = 1
+      @scales_to = 1
     end
 
     def destroy

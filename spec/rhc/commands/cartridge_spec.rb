@@ -241,7 +241,7 @@ describe RHC::Commands::Cartridge do
         app = domain.add_application("app1", "mock_type")
         app.add_cartridge('mock_cart-1')
       end
-      it { run_output.should match('connection_url = http://fake.url') }
+      it { run_output.should match('Connection URL = http://fake.url') }
     end
   end
 end

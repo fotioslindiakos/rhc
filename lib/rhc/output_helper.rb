@@ -70,6 +70,8 @@ module RHC
         [cart.name,cart.connection_info]
       end]
 
+      properties = "None" unless properties.present?
+
       say_table \
         "Cartridges",
         properties,
