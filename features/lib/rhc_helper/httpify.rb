@@ -85,8 +85,12 @@ module RHCHelper
             when Net::HTTPServiceUnavailable, SocketError
               my_sleep(start,uri,response,options)
             else
-              # Some other response
-              break
+              case options[:expected]
+              when Net::HTTPServiceUnavailable
+                my_sleep(start,uri,response,options)
+              else
+                break
+              end
             end
           end
         end
