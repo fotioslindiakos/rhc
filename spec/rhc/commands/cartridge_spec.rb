@@ -15,8 +15,9 @@ describe RHC::Commands::Cartridge do
       before(:each) do
         @rc = MockRestClient.new
       end
-      it { expect { run }.should exit_with_code(0) }
-      it { run_output.should match("mock_cart-1, mock_cart-2, unique_mock_cart-1") }
+      it {
+        succeed_with_message "mock_cart-1, mock_cart-2, unique_mock_cart-1"
+      }
     end
   end
 
@@ -27,8 +28,9 @@ describe RHC::Commands::Cartridge do
       before(:each) do
         @rc = MockRestClient.new
       end
-      it { expect { run }.should exit_with_code(0) }
-      it { run_output.should match("mock_cart-1, mock_cart-2, unique_mock_cart-1") }
+      it {
+        succeed_with_message "mock_cart-1, mock_cart-2, unique_mock_cart-1"
+      }
     end
   end
 
@@ -41,8 +43,9 @@ describe RHC::Commands::Cartridge do
         domain = @rc.add_domain("mock_domain")
         app = domain.add_application("app1", "mock_type")
       end
-      it { expect { run }.should exit_with_code(0) }
-      it { run_output.should match("Success") }
+      it {
+        succeed_with_message
+      }
     end
   end
 
@@ -58,8 +61,9 @@ describe RHC::Commands::Cartridge do
         instance.stub(:git_config_get) { |key| app.uuid if key == "rhc.app-uuid" }
         RHC::Commands::Cartridge.stub(:new) { instance }
       end
-      it { expect { run }.should exit_with_code(0) }
-      it { run_output.should match("Success") }
+      it {
+        succeed_with_message
+      }
     end
   end
 
@@ -75,7 +79,9 @@ describe RHC::Commands::Cartridge do
         instance.stub(:git_config_get) { |key| "" if key == "rhc.app-uuid" }
         RHC::Commands::Cartridge.stub(:new) { instance }
       end
-      it { expect { run }.should exit_with_code(1) }
+      it {
+        fail_with_code
+      }
     end
   end
 
@@ -88,8 +94,9 @@ describe RHC::Commands::Cartridge do
         domain = @rc.add_domain("mock_domain")
         app = domain.add_application("app1", "mock_type")
       end
-      it { expect { run }.should exit_with_code(0) }
-      it { run_output.should match("Success") }
+      it {
+        succeed_with_message
+      }
     end
   end
 
@@ -102,7 +109,9 @@ describe RHC::Commands::Cartridge do
         domain = @rc.add_domain("mock_domain")
         app = domain.add_application("app1", "mock_type")
       end
-      it { expect { run }.should exit_with_code(154) }
+      it {
+        fail_with_code 154
+      }
     end
   end
 
@@ -115,7 +124,9 @@ describe RHC::Commands::Cartridge do
         domain = @rc.add_domain("mock_domain")
         app = domain.add_application("app1", "mock_type")
       end
-      it { expect { run }.should exit_with_code(155) }
+      it {
+        fail_with_code 155
+      }
     end
   end
 
@@ -129,8 +140,9 @@ describe RHC::Commands::Cartridge do
         app = domain.add_application("app1", "mock_type")
         app.add_cartridge('mock_cart-1')
       end
-      it { expect { run }.should exit_with_code(1) }
-      it { run_output.should match("Removing a cartridge is a destructive operation") }
+      it {
+        fail_with_message "Removing a cartridge is a destructive operation"
+      }
     end
   end
 
