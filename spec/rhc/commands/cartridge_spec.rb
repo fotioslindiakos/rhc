@@ -246,14 +246,78 @@ describe RHC::Commands::Cartridge do
   describe 'cartridge show' do
     let(:arguments) { ['cartridge', 'show', 'mock_cart-1', '-a', 'app1', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
 
+    before(:each) do
+      @rc = MockRestClient.new
+      domain = @rc.add_domain("mock_domain")
+      app = domain.add_application("app1", "mock_type")
+      app.add_cartridge('mock_cart-1')
+    end
+
+    context 'when run' do
+      it { run_output.should match('Connection URL = http://fake.url') }
+    end
+  end
+
+  describe 'cartridge show scaled' do
+    let(:arguments) { ['cartridge', 'show', 'mock_type', '-a', 'app1', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+
     context 'when run' do
       before(:each) do
         @rc = MockRestClient.new
         domain = @rc.add_domain("mock_domain")
-        app = domain.add_application("app1", "mock_type")
-        app.add_cartridge('mock_cart-1')
+        app = domain.add_application("app1", "mock_type", true)
       end
-      it { run_output.should match('Connection URL = http://fake.url') }
+      it { run_output.should match('Scaling Info') }
+      it { run_output.should match('Current = 2') }
+      it { run_output.should match('Minimum = 2') }
+      it { run_output.should match('Maximum = available gears') }
+    end
+  end
+
+  describe 'cartridge scale' do
+    let(:arguments) { ['cartridge', 'scale', @cart_type || 'mock_type', '-a', 'app1', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] | (@extra_args || []) }
+
+    before(:each) do
+      @rc = MockRestClient.new
+      domain = @rc.add_domain("mock_domain")
+      app = domain.add_application("app1", "mock_type", scalable)
+    end
+
+    context 'when run with scalable app' do
+      let(:scalable){ true }
+
+      it "with no values" do
+        fail_with_message "Must provide either a min or max"
+      end
+
+      it "with a min value" do
+        @extra_args = ["--min","6"]
+        succeed_with_message "Minimum = 6"
+      end
+
+      it "with a max value" do
+        @extra_args = ["--max","3"]
+        succeed_with_message 'Maximum = 3'
+      end
+
+      it "with an invalid min value" do
+        @extra_args = ["--min","a"]
+        fail_with_message "invalid argument: --min"
+      end
+
+      it "with an invalid max value" do
+        @extra_args = ["--max","a"]
+        fail_with_message "invalid argument: --max"
+      end
+    end
+
+    context 'when run with a nonscalable app' do
+      let(:scalable){ false }
+
+      it "with a min value" do
+        @extra_args = ["--min","6"]
+        fail_with_message "Cartridge is not scalable"
+      end
     end
   end
 end
