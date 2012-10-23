@@ -24,11 +24,22 @@ Feature: Scaled Application Operations
       | stopped | started   | the application | be accessible |
       | running | deleted   | the application | not exist |
 
-  Scenario Outline: Changing Minimum Value
+  Scenario Outline: Changing Scaling Value
     When we are updating the <cart> cartridge
     And the <type> scaling value is set to <value>
     Then the <type> scaling value should be <value>
 
     Examples:
       | cart    | type  | value |
-      | php-5.3 | min   | 3     |
+      | php-5.3 | min   |   3   |
+      | php-5.3 | max   |   5   |
+      | php-5.3 | max   |   -1  |
+
+  Scenario Outline: Invalid Scaling Values
+    When we are updating the <cart> cartridge
+    And the <type> scaling value is set to <value>
+    Then it should fail with code <code>
+
+    Examples:
+      | cart    | type  | value | code |
+      | php-5.3 | min   |   a   |  0   |

@@ -44,8 +44,7 @@ When /^we are updating the (.+) cartridge$/ do |cart|
 end
 
 When /^the (\w+) scaling value is set to (.*)$/ do |minmax,value|
-  puts "Scaling #{@cartrige_name}"
-  @app.cartridge(@cartridge_name).send(:scale,"--#{minmax} #{value}")
+  @exitcode = @app.cartridge(@cartridge_name).send(:scale,"--#{minmax} #{value}")
 end
 
 Then /^the (\w+) scaling value should be (.*)$/ do |minmax,value|
@@ -54,10 +53,14 @@ Then /^the (\w+) scaling value should be (.*)$/ do |minmax,value|
     :max => "Maximum"
   }[minmax.to_sym]
 
-  value = (value == -1 ? "available gears" : value)
+  value = (value == "-1" ? "available gears" : value)
 
   match_string = [expected,value].join(" = ")
-  regex = Regexp.new(/\s+#{match_string}S/)
+  regex = Regexp.new(/\s+#{match_string}/)
 
-  @app.cartridge(@cartridge_name).status.should match regex
+  @app.cartridge(@cartridge_name).show.should match regex
+end
+
+Then /^it should fail with code (\d+)$/ do |code|
+  @exitcode.should == code
 end
