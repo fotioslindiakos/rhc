@@ -175,7 +175,7 @@ module ExitCodeMatchers
   end
 
   def exit_with_message_and_code(message = nil, code)
-    expect { run }.should exit_with_code(code)
+    expect{ run }.should exit_with_code(code)
     run_output.should match(message) if message
   end
 
