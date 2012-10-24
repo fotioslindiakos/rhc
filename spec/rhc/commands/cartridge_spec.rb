@@ -4,6 +4,24 @@ require 'rhc/commands/cartridge'
 require 'rhc/config'
 
 describe RHC::Commands::Cartridge do
+  def exit_with_message_and_code(message = nil, code)
+    expect{ run }.should exit_with_code(code)
+    run_output.should match(message) if message
+  end
+
+  def succeed_with_message(message = "Success")
+    exit_with_message_and_code(message,0)
+  end
+
+  def fail_with_message(message,code = 1)
+    exit_with_message_and_code(message,code)
+  end
+
+  def fail_with_code(code = 1)
+    exit_with_message_and_code(nil,code)
+  end
+
+
   before(:each) do
     RHC::Config.set_defaults
   end
