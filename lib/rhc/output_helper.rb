@@ -129,7 +129,7 @@ module RHC
     def display_no_info(type)
       say_table \
         nil,
-        "This #{type} has no information to show"
+        ["This #{type} has no information to show"]
     end
 
     private
@@ -140,13 +140,8 @@ module RHC
       # Go through all the table rows
       _proc = proc{
         table.each do |s|
-          # If this is an array, we're assuming it's recursive
-          if s.is_a?(Array)
-            say_table(s[0],s[1])
-          else
-            # Remove trailing = (like for cartridges list)
-            indent s.gsub(/\s*=\s*$/,'')
-          end
+          # Remove trailing = (like for cartridges list)
+          indent s.gsub(/\s*=\s*$/,'')
         end
       }
 
