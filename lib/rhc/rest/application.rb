@@ -5,6 +5,7 @@ module RHC
   module Rest
     class Application < Base
       include Rest
+      include AsyncAware
 
       define_attr :domain_id, :name, :creation_time, :uuid, :aliases,
                   :git_url, :app_url, :gear_profile, :framework,
@@ -145,6 +146,11 @@ module RHC
         c = name <=> other.name
         return c unless c == 0
         domain_id <=> other.domain_id
+      end
+
+      # This method will prefetch all cartridges
+      def prefetch
+        cartridges
       end
     end
   end

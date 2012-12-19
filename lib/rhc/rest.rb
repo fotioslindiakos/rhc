@@ -11,6 +11,7 @@ module RHC
     autoload :Key,         'rhc/rest/key'
     autoload :User,        'rhc/rest/user'
     autoload :GearGroup,   'rhc/rest/gear_group'
+    autoload :AsyncAware,  'rhc/async_aware'
 
     class Exception < RuntimeError
       attr_reader :code

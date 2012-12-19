@@ -1,7 +1,10 @@
 require 'rhc/commands/base'
+require 'rhc/async_aware'
 
 module RHC::Commands
   class Domain < Base
+    include AsyncAware
+
     summary "Manage the domain and namespace for your applications."
     syntax "<action>"
     default_action :show
@@ -47,7 +50,7 @@ module RHC::Commands
 
       warn "In order to deploy applications, you must create a domain with 'rhc setup' or 'rhc domain create'." and return 1 unless domain
 
-      applications = domain.applications
+      applications = prefetch{ domain.applications }
 
       if applications.present?
         header "Applications in #{domain.id} domain" do
