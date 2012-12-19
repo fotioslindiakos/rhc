@@ -165,6 +165,18 @@ module RHC
         api.rest_method "GET_USER"
       end
 
+=begin
+# These methods have been moved to API
+      # TODO: Add test that checks to see if we're using the cached domains properly
+      # TODO: Need this to clear the domain cache
+      define_rest_method :add_domain, :PARAMS => [:id]
+      # TODO: Need this to set the domains cache
+      define_rest_method :domains,    :LINK => "LIST_DOMAINS"
+
+      define_rest_method :cartridges, :LINK => "LIST_CARTRIDGES"
+      define_rest_method :user,       :LINK => "GET_USER"
+=end
+
       def sshkeys
         debug "Finding all keys for #{user.login}"
         user.keys

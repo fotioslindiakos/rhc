@@ -193,7 +193,7 @@ module RHC::Commands
     argument :app, "The name of the application you are stopping", ["-a", "--app app"], :context => :app_context
     option ["-n", "--namespace namespace"], "Namespace of the application the cartridge belongs to", :context => :namespace_context, :required => true
     def force_stop(app)
-      app_action app, :stop, true
+      app_action app, :force_stop
 
       results { say "#{app} force stopped" }
       0

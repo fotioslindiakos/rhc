@@ -4,7 +4,7 @@ require 'rest-client'
 module RHC
   module Rest
 
-    autoload :Api, 'rhc/rest/api'
+    autoload :Api,         'rhc/rest/api'
     autoload :Application, 'rhc/rest/application'
     autoload :Cartridge,   'rhc/rest/cartridge'
     autoload :Client,      'rhc/rest/client'

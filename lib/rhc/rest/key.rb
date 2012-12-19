@@ -5,15 +5,9 @@ module RHC
     class Key < Base
       define_attr :name, :type, :content
 
-      def update(type, content)
-        debug "Updating key #{self.name}"
-        rest_method "UPDATE", :type => type, :content => content
-      end
+      define_rest_method :update,  :PARAMS => [:type, :content]
+      define_rest_method :destroy, :LINK => "DELETE"
 
-      def destroy
-        debug "Deleting key #{self.name}"
-        rest_method "DELETE"
-      end
       alias :delete :destroy
 
       def fingerprint

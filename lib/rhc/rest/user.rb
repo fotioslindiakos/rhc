@@ -5,15 +5,8 @@ module RHC
     class User < Base
       define_attr :login
 
-      def add_key(name, content, type)
-        debug "Add key #{name} of type #{type} for user #{login}"
-        rest_method "ADD_KEY", :name => name, :type => type, :content => content
-      end
-
-      def keys
-        debug "Getting all keys for user #{login}"
-        rest_method "LIST_KEYS"
-      end
+      define_rest_method :add_key, :PARAMS => [:name,:content,:type]
+      define_rest_method :keys,    :LINK => "LIST_KEYS"
 
       #Find Key by name
       def find_key(name)
