@@ -55,26 +55,14 @@ module RHC
         super({:links => links}, use_debug)
       end
 
-      def add_domain(id)
-        debug "Adding domain #{id}"
-        @domains = nil
-        rest_method "ADD_DOMAIN", :id => id
-      end
+      # TODO: Add test that checks to see if we're using the cached domains properly
+      # TODO: Need this to clear the domain cache
+      define_rest_method :add_domain, :PARAMS => [:id]
+      # TODO: Need this to set the domains cache
+      define_rest_method :domains,    :LINK => "LIST_DOMAINS"
 
-      def domains
-        debug "Getting all domains"
-        @domains ||= rest_method "LIST_DOMAINS"
-      end
-
-      def cartridges
-        debug "Getting all cartridges"
-        rest_method("LIST_CARTRIDGES")
-      end
-
-      def user
-        debug "Getting user info"
-        rest_method "GET_USER"
-      end
+      define_rest_method :cartridges, :LINK => "LIST_CARTRIDGES"
+      define_rest_method :user,       :LINK => "GET_USER"
 
       def sshkeys
         debug "Finding all keys for #{user.login}"

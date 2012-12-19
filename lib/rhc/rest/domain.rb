@@ -26,22 +26,14 @@ module RHC
         rest_method "ADD_APPLICATION", payload, timeout
       end
 
-      def applications
-        debug "Getting all applications for domain #{id}"
-        rest_method "LIST_APPLICATIONS"
-      end
+      define_rest_method :applications, :LINK => "LIST_APPLICATIONS"
 
-      def update(new_id)
-        debug "Updating domain #{id} to #{new_id}"
-        # 5 minute timeout as this may take time if there are a lot of apps
-        rest_method "UPDATE", {:id => new_id}, 300
-      end
+      # TODO: Need to specify timeout
+      define_rest_method :update, :PARAMS => [:id]
       alias :save :update
 
-      def destroy(force=false)
-        debug "Deleting domain #{id}"
-        rest_method "DELETE", :force => force
-      end
+      # TODO: Add test to see if we're actually forcing the delete
+      define_rest_method :destroy, :LINK => "DELETE", :PARAMS => [:force]
       alias :delete :destroy
 
       def find_application(name, options={})

@@ -12,6 +12,22 @@ module RHC
                   :ssh_url, :building_app
       alias_method :domain_name, :domain_id
 
+      define_rest_method :gear_groups,  :LINK => "GET_GEAR_GROUPS"
+      define_rest_method :threaddump,   :LINK => "THREAD_DUMP",  :event => "thread-dump"
+
+      define_event_rest_method :tidy
+      define_event_rest_method :start
+      define_event_rest_method :restart
+      define_event_rest_method :destroy,      :LINK => "DELETE"
+      define_event_rest_method :reload
+      define_event_rest_method :stop
+      define_event_rest_method :force_stop,   :LINK => "STOP",         :event => "force-stop"
+      define_event_rest_method :add_alias,    :event => "add-alias",   :PARAMS => [:alias]
+      define_event_rest_method :remove_alias, :event => "remove-alias", :PARAMS => [:alias]
+
+      alias :delete :destroy
+
+
       # Query helper to say consistent with cartridge
       def scalable?
         scalable
@@ -24,73 +40,15 @@ module RHC
         carts.delete_if{|x| scales_with.include?(x.name)}
       end
 
-      def add_cartridge(name, timeout=nil)
-        debug "Adding cartridge #{name}"
-        @cartridges = nil
-        rest_method "ADD_CARTRIDGE", {:name => name}, timeout
-      end
+      # TODO: Need this to clear the cache
+      # TODO: Need this to accept the timeout properly
+      define_rest_method :add_cartridge, :PARAMS => [:name]
 
+      # TODO: Need this to cache cartridges
+      #define_rest_method :cartridges,    :LINK => "LIST_CARTRIDGES"
       def cartridges
         debug "Getting all cartridges for application #{name}"
         @cartridges ||= rest_method "LIST_CARTRIDGES"
-      end
-
-      def gear_groups
-        debug "Getting all gear groups for application #{name}"
-        rest_method "GET_GEAR_GROUPS"
-      end
-
-      def tidy
-        debug "Starting application #{name}"
-        rest_method 'TIDY', :event => "tidy"
-      end
-
-      def start
-        debug "Starting application #{name}"
-        rest_method 'START', :event => "start"
-      end
-
-      def stop(force=false)
-        debug "Stopping application #{name} force-#{force}"
-
-        if force
-          payload = {:event=> "force-stop"}
-        else
-          payload = {:event=> "stop"}
-        end
-
-        rest_method "STOP", payload
-      end
-
-      def restart
-        debug "Restarting application #{name}"
-        rest_method "RESTART", :event => "restart"
-      end
-
-      def destroy
-        debug "Deleting application #{name}"
-        rest_method "DELETE"
-      end
-      alias :delete :destroy
-
-      def reload
-        debug "Reload application #{name}"
-        rest_method "RELOAD", :event => "reload"
-      end
-
-      def threaddump
-        debug "Running thread dump for #{name}"
-        rest_method "THREAD_DUMP", :event => "thread-dump"
-      end
-
-      def add_alias(app_alias)
-        debug "Running add_alias for #{name}"
-        rest_method "ADD_ALIAS", :event => "add-alias", :alias => app_alias
-      end
-
-      def remove_alias(app_alias)
-        debug "Running add_alias for #{name}"
-        rest_method "REMOVE_ALIAS", :event => "remove-alias", :alias => app_alias
       end
 
       #Find Cartridge by name

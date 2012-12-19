@@ -1,6 +1,7 @@
 require 'base64'
 require 'rhc/json'
 require 'rhc/rest/attributes'
+require 'rhc/rest/dynamic'
 
 module RHC
   module Rest
@@ -8,6 +9,7 @@ module RHC
       include Rest
       include Attributes
       extend AttributesClass
+      extend Dynamic
 
       define_attr :messages
 

@@ -6,6 +6,15 @@ module RHC
     class Cartridge < Base
       define_attr :type, :name, :display_name, :properties, :gear_profile, :status_messages, :scales_to, :scales_from, :scales_with, :current_scale, :supported_scales_to, :supported_scales_from, :tags
 
+      define_event_rest_method :start
+      define_event_rest_method :stop
+      define_event_rest_method :restart
+      define_event_rest_method :reload
+
+      define_rest_method :destroy,      :LINK => "DELETE"
+
+      alias :delete :destroy
+
       def scalable?
         supported_scales_to != supported_scales_from
       end
@@ -38,42 +47,13 @@ module RHC
         result.status_messages
       end
 
-      def start
-        debug "Starting cartridge #{name}"
-        rest_method "START", :event => "start"
-      end
-
-      def stop()
-        debug "Stopping cartridge #{name}"
-        rest_method "STOP", :event => "stop"
-      end
-
-      def restart
-        debug "Restarting cartridge #{name}"
-        rest_method "RESTART", :event => "restart"
-      end
-
-      def reload
-        debug "Reloading cartridge #{name}"
-        rest_method "RESTART", :event => "reload"
-      end
-
-      def destroy
-        debug "Deleting cartridge #{name}"
-        rest_method "DELETE"
-      end
-      alias :delete :destroy
-
       def set_scales(values)
         values.delete_if{|k,v| v.nil? }
         debug "Setting scales = %s" % values.map{|k,v| "#{k}: #{v}"}.join(" ")
         rest_method "UPDATE", values
       end
 
-      def set_storage(values)
-        debug "Setting additional storage: #{values[:additional_gear_storage]}GB"
-        rest_method "UPDATE", values
-      end
+      define_rest_method :set_storage, :LINK => "UPDATE"
 
       def connection_info
         info = property(:cart_data, :connection_url) || property(:cart_data, :job_url) || property(:cart_data, :monitoring_url)
