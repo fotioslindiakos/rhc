@@ -54,15 +54,8 @@ module RHC
         @domains ||= api.rest_method "LIST_DOMAINS"
       end
 
-      def cartridges
-        debug "Getting all cartridges"
-        api.rest_method("LIST_CARTRIDGES")
-      end
-
-      def user
-        debug "Getting user info"
-        api.rest_method "GET_USER"
-      end
+      define_rest_method :cartridges, :LINK => "LIST_CARTRIDGES"
+      define_rest_method :user,       :LINK => "GET_USER"
 
       def sshkeys
         debug "Finding all keys for #{user.login}"

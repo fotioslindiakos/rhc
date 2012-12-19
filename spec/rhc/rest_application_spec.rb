@@ -115,7 +115,7 @@ module RHC
           it_should_behave_like "a control method"
         end
         context " and the request is forced (force == true)" do
-          let(:control_data) { { :method => :stop, :arg => true, :event => 'force-stop', :link => 'stop' } }
+          let(:control_data) { { :method => :force_stop, :event => 'force-stop', :link => 'stop' } }
           it_should_behave_like "a control method"
         end
       end

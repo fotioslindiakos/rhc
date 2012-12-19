@@ -16,7 +16,7 @@ module RHC::Commands
     def add(app, app_alias)
       rest_domain = rest_client.find_domain(options.namespace)
       rest_app = rest_domain.find_application(app)
-      response = rest_app.add_alias(app_alias)
+      response = rest_app.add_alias(:alias => app_alias)
       results { say response.messages.first } if response.messages
       0
     end
@@ -30,7 +30,7 @@ module RHC::Commands
     def remove(app, app_alias)
       rest_domain = rest_client.find_domain(options.namespace)
       rest_app = rest_domain.find_application(app)
-      response = rest_app.remove_alias(app_alias)
+      response = rest_app.remove_alias(:alias => app_alias)
       results { say response.messages.first } if response.messages
       0
     end

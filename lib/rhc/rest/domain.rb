@@ -22,10 +22,7 @@ module RHC
         rest_method "ADD_APPLICATION", payload, options
       end
 
-      def applications
-        debug "Getting all applications for domain #{id}"
-        rest_method "LIST_APPLICATIONS"
-      end
+      define_rest_method :applications, :LINK => "LIST_APPLICATIONS"
 
       def update(new_id)
         debug "Updating domain #{id} to #{new_id}"

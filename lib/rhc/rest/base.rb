@@ -1,10 +1,12 @@
 require 'rhc/rest/attributes'
+require 'rhc/rest/dynamic'
 
 module RHC
   module Rest
     class Base
       include Attributes
       extend AttributesClass
+      extend Dynamic
 
       define_attr :messages
 
