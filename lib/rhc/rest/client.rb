@@ -1,6 +1,7 @@
 require 'rhc/json'
 require 'rhc/rest/base'
 require 'rhc/helpers'
+require 'rhc/rest/api'
 require 'uri'
 
 RestClient.proxy = URI.parse(ENV['http_proxy']).to_s if ENV['http_proxy'].present?
@@ -8,6 +9,7 @@ RestClient.proxy = URI.parse(ENV['http_proxy']).to_s if ENV['http_proxy'].presen
 module RHC
   module Rest
     class Client < Base
+      include RHC::Rest::DelegateApi
 
       # Keep the list of supported API versions here
       # The list may not necessarily be sorted; we will select the last

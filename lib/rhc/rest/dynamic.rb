@@ -16,7 +16,7 @@ module RHC::Rest::Dynamic
       :options      => options
     }
 
-    define_method("#{method}") do |*_args|
+    send :define_method, method do |*_args|
       _options = _args.extract_options!
       _arguments = _args
 
@@ -29,7 +29,8 @@ module RHC::Rest::Dynamic
       _options.merge!(defaults[:options])
 
       debug "Calling #{link_name} with #{_arguments}"
-        rest_method(link_name, _arguments, _options)
+
+      rest_method(link_name, _arguments, _options)
     end
   end
 
