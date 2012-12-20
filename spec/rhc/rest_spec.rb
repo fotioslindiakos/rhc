@@ -491,8 +491,11 @@ module RHC
       context "with a 500 response" do
         let(:code){ 500 }
 
-        it "raises a generic server error" do
-          lambda { subject.send(:process_error_response, response) }.should raise_error(RHC::Rest::ServerErrorException, /server did not respond correctly.*verify that you can access the OpenShift server/i)
+        context "without proxy set" do
+          before{ RestClient.should_receive(:proxy).once.and_return(nil) }
+          it "raises a generic server error" do
+            lambda { subject.send(:process_error_response, response) }.should raise_error(RHC::Rest::ServerErrorException, /server did not respond correctly.*verify that you can access the OpenShift server/i)
+          end
         end
 
         context "when proxy is set" do
