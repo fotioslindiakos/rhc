@@ -6,6 +6,7 @@ module RHC::Rest::Dynamic
     link_name = arguments.delete(:LINK) || method.to_s.upcase
     param_names = arguments.delete(:PARAMS)
     options = arguments.delete(:OPTIONS) || {}
+    delegate = arguments.delete(:DELEGATE) || false
 
     # This is needed because we can't actually save the arguments
     # in the newly defined method
@@ -30,7 +31,11 @@ module RHC::Rest::Dynamic
 
       debug "Calling #{link_name} with #{_arguments}"
 
-      rest_method(link_name, _arguments, _options)
+      if delegate
+        api.rest_method(link_name, _arguments, _options)
+      else
+        rest_method(link_name, _arguments, _options)
+      end
     end
   end
 
@@ -39,6 +44,15 @@ module RHC::Rest::Dynamic
     method = args.first
 
     arguments[:event] ||= method.to_s
+
+    define_rest_method(method,arguments)
+  end
+
+  def define_delegated_rest_method(*args)
+    arguments = args.extract_options!
+    method = args.first
+
+    arguments[:DELEGATE] = true
 
     define_rest_method(method,arguments)
   end

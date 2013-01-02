@@ -84,11 +84,5 @@ server at #{URI.parse(client.url).host} supports #{@server_api_versions.join(', 
           end
         end
     end
-
-    module DelegateApi
-      def rest_method(*args)
-        api.rest_method(*args)
-      end
-    end
   end
 end

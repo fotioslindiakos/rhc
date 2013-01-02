@@ -9,7 +9,6 @@ RestClient.proxy = URI.parse(ENV['http_proxy']).to_s if ENV['http_proxy'].presen
 module RHC
   module Rest
     class Client < Base
-      include RHC::Rest::DelegateApi
 
       # Keep the list of supported API versions here
       # The list may not necessarily be sorted; we will select the last
@@ -146,38 +145,14 @@ module RHC
       # Delegate methods to API, should be moved there
       # and then simply passed through.
 
-      def add_domain(id)
-        debug "Adding domain #{id}"
-        @domains = nil
-        api.rest_method "ADD_DOMAIN", :id => id
-      end
-
-      def domains
-        debug "Getting all domains"
-        @domains ||= api.rest_method "LIST_DOMAINS"
-      end
-
-      def cartridges
-        debug "Getting all cartridges"
-        api.rest_method("LIST_CARTRIDGES", nil, :lazy_auth => true)
-      end
-
-      def user
-        debug "Getting user info"
-        api.rest_method "GET_USER"
-      end
-
-=begin
-# These methods have been moved to API
       # TODO: Add test that checks to see if we're using the cached domains properly
       # TODO: Need this to clear the domain cache
-      define_rest_method :add_domain, :PARAMS => [:id]
+      define_delegated_rest_method :add_domain, :PARAMS => [:id]
       # TODO: Need this to set the domains cache
-      define_rest_method :domains,    :LINK => "LIST_DOMAINS"
+      define_delegated_rest_method :domains,    :LINK => "LIST_DOMAINS"
 
-      define_rest_method :cartridges, :LINK => "LIST_CARTRIDGES"
-      define_rest_method :user,       :LINK => "GET_USER"
-=end
+      define_delegated_rest_method :cartridges, :LINK => "LIST_CARTRIDGES", :OPTIONS => {:lazy_auth => true}
+      define_delegated_rest_method :user,       :LINK => "GET_USER"
 
       def sshkeys
         debug "Finding all keys for #{user.login}"
